@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" href="/static/images/images.ico" type="image/x-icon">
+        <title>Sistema de Consulta de licencias - Municipalidad de Pallasca</title>
+        <meta name="description" content="Consulta de licencia de conducir en la Municipalidad de Pallasca">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </head>
+
+<body>
+    <div class="container" id="containerTablaDatos">
+        <h1>Manejo de Datos</h1>
+        <a href="{{ url_for('logout') }}" class="btn btn-danger">Salir</a>
+        <div class="crud-buttons">
+            <button class="btn-ingresar" data-toggle="modal" data-target="#addDataModal">Ingresar Nuevos Datos
+                Manualmente</button>
+            <a href="{{ url_for('upload_excel') }}" class="btn-ingresar">Ingresar Datos por Excel</a>
+            <a href="{{ url_for('upload_csv') }}" class="btn-ingresar">Ingresar Datos por CSV</a>
+        </div>
+
+        <!-- Flash message modal -->
+        <div class="modal fade" id="flashMessageModal" tabindex="-1" role="dialog"
+            aria-labelledby="flashMessageModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="flashMessageModalLabel">Mensaje</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        {{ get_flashed_messages()[0] }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mb-2">
+            <div>
+                <label for="per_page">Mostrar</label>
+                <select id="per_page" class="form-control d-inline-block" style="width: auto;"
+                    onchange="updatePerPage()">
+                    <option value="10" {% if per_page==10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if per_page==20 %}selected{% endif %}>20</option>
+                    <option value="30" {% if per_page==30 %}selected{% endif %}>30</option>
+                    <option value="50" {% if per_page==50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if per_page==100 %}selected{% endif %}>100</option>
+                </select>
+                <span>registros por pagina</span>
+            </div>
+            <!-- Campo para buscar globalmente -->
+            <div>
+                <label for="search_input">Buscar:</label>
+                <input type="text" id="search_input" class="form-control d-inline-block" style="width: auto" onkeydown="handleSearch(event)">
+            </div>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th data-column="dni" data-order="asc" onclick="sortTable(this)">
+                        DNI / CE / CPP <i class="fas fa-sort"></i>
+                    </th>
+                    <th data-column="nombres" data-order="asc" onclick="sortTable(this)">
+                        Nombres <i class="fas fa-sort"></i>
+                    </th>
+                    <th data-column="apellidos" data-order="asc" onclick="sortTable(this)">
+                        Apellidos <i class="fas fa-sort"></i>
+                    </th>
+                    <th data-column="licencia" data-order="asc" onclick="sortTable(this)">
+                        Licencia <i class="fas fa-sort"></i>
+                    </th>
+                    <th data-column="fecha_revalidacion" data-order="asc" onclick="sortTable(this)">
+                        Fecha de Revalidacion <i class="fas fa-sort"></i>
+                    </th>
+                    <th data-column="categoria" data-order="asc" onclick="sortTable(this)">
+                        Categoria <i class="fas fa-sort"></i>
+                    </th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="table_body">
+                {% for row in data %}
+                <tr>
+                    <td>{{ row['dni'] }}</td>
+                    <td>{{ row['nombres'] }}</td>
+                    <td>{{ row['apellidos'] }}</td>
+                    <td>{{ row['licencia'] }}</td>
+                    <td>{{ row['fecha_revalidacion'] }}</td>
+                    <td>{{ row['categoria'] }}</td>
+                    <td>
+                        <a href="#" class="icon" data-toggle="modal" data-target="#viewDataModal"
+                            data-dni="{{ row['dni'] }}" data-nombres="{{ row['nombres'] }}"
+                            data-apellidos="{{ row['apellidos'] }}" data-licencia="{{ row['licencia'] }}"
+                            data-fecha_revalidacion="{{ row['fecha_revalidacion'] }}"
+                            data-categoria="{{ row['categoria'] }}" data-placement="top" data-toggle="tooltip"
+                            title="Ver registro">👁</a>
+                        <a href="#" class="icon" data-toggle="modal" data-target="#editDataModal"
+                            data-dni="{{ row['dni'] }}" data-nombres="{{ row['nombres'] }}"
+                            data-apellidos="{{ row['apellidos'] }}" data-licencia="{{ row['licencia'] }}"
+                            data-fecha_revalidacion="{{ row['fecha_revalidacion'] }}"
+                            data-categoria="{{ row['categoria'] }}" data-placement="top" data-toggle="tooltip"
+                            title="Editar elemento">✏️</a>
+                        <a href="#" class="icon" data-toggle="modal" data-target="#confirmDeleteModal"
+                            data-dni="{{ row['dni'] }}" data-placement="top" data-toggle="tooltip"
+                            title="Eliminar elemento">🗑</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('manejodatos', page=page-1, per_page=per_page) }}"
+                        tabindex="-1">Anterior</a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link">Pg. {{ page }}</a>
+                </li>
+                <li class="page-item {% if (page * per_page) >= total %}disabled{% endif %}">
+                    <a class="page-link"
+                        href="{{ url_for('manejodatos', page=page+1, per_page=per_page) }}">Siguiente</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Modal para Ingresar Datos -->
+    <div class="modal fade" id="addDataModal" tabindex="-1" role="dialog" aria-labelledby="addDataModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addDataModalLabel">Ingresar Datos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addDataForm" method="POST" action="{{ url_for('add_data') }}">
+                        <div class="form-group">
+                            <label for="dni">DNI / CE / CPP</label>
+                            <input type="text" class="form-control" id="dni" name="dni" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nombres">Nombres</label>
+                            <input type="text" class="form-control" id="nombres" name="nombres" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="apellidos">Apellidos</label>
+                            <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="licencia">Licencia</label>
+                            <input type="text" class="form-control" id="licencia" name="licencia" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fecha_revalidacion">Fecha de Revalidacion</label>
+                            <input type="date" class="form-control" id="fecha_revalidacion" name="fecha_revalidacion"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria">Categoria</label>
+                            <input type="text" class="form-control" id="categoria" name="categoria" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Agregar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ver Datos -->
+    <div class="modal fade" id="viewDataModal" tabindex="-1" role="dialog" aria-labelledby="viewDataModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewDataModalLabel">Ver Datos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>DNI / CE / CPP:</strong> <span id="viewDni"></span></p>
+                    <p><strong>Nombres:</strong> <span id="viewNombres"></span></p>
+                    <p><strong>Apellidos:</strong> <span id="viewApellidos"></span></p>
+                    <p><strong>Licencia:</strong> <span id="viewLicencia"></span></p>
+                    <p><strong>Fecha de Revalidacion:</strong> <span id="viewFechaRevalidacion"></span></p>
+                    <p><strong>Categoria:</strong> <span id="viewCategoria"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Datos -->
+    <div class="modal fade" id="editDataModal" tabindex="-1" role="dialog" aria-labelledby="editDataModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editDataModalLabel">Editar Datos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editDataForm" method="POST" action="{{ url_for('edit_data') }}">
+                        <input type="hidden" id="originalDni" name="originalDni">
+                        
+                        <div class="form-group">
+                            <label for="editDni">DNI / CE / CPP</label>
+                            <input type="text" class="form-control" id="editDni" name="dni" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editNombres">Nombres</label>
+                            <input type="text" class="form-control" id="editNombres" name="nombres" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editApellidos">Apellidos</label>
+                            <input type="text" class="form-control" id="editApellidos" name="apellidos" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLicencia">Licencia</label>
+                            <input type="text" class="form-control" id="editLicencia" name="licencia" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editFechaRevalidacion">Fecha de Revalidacion</label>
+                            <input type="date" class="form-control" id="editFechaRevalidacion" name="fecha_revalidacion" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editCategoria">Categoria</label>
+                            <input type="text" class="form-control" id="editCategoria" name="categoria" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Confirmar Eliminacion -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog"
+        aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminacion</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ¿Deseas eliminar este registro?
+                </div>
+                <div class="modal-footer">
+                    <form id="deleteForm" method="POST" action="">
+                        <button type="submit" class="btn btn-danger">Aceptar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function sortTable(header) {
+        var column = header.getAttribute("data-column");
+        var order = header.getAttribute("data-order");
+        var newOrder = order === "asc" ? "desc" : "asc";
+        
+        // Actualizar el icono de ordenacion
+        document.querySelectorAll('th i').forEach(icon => icon.className = 'fas fa-sort');
+        header.querySelector('i').className = newOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+
+        var table = document.querySelector("tbody");
+        var rows = Array.from(table.rows);
+
+        // Ordenar las filas basado en la columna seleccionada
+        rows.sort((a, b) => {
+            var cellA = a.querySelector(`td:nth-child(${header.cellIndex + 1})`).innerText.toLowerCase();
+            var cellB = b.querySelector(`td:nth-child(${header.cellIndex + 1})`).innerText.toLowerCase();
+
+            if (cellA < cellB) return newOrder === 'asc' ? -1 : 1;
+            if (cellA > cellB) return newOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        // Actualizar el DOM con las filas ordenadas
+        rows.forEach(row => table.appendChild(row));
+
+        // Actualizar el orden en el header
+        header.setAttribute("data-order", newOrder);
+    }
+
+    function handleSearch(event) {
+        if (event.key === 'Enter') {
+            searchTable();
+        }
+    }
+
+    function searchTable() {
+        var input = document.getElementById('search_input').value.toLowerCase();
+        var table = document.getElementById("table_body");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 0; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td");
+            var match = false;
+            for (var j = 0; j < cells.length; j++) {
+                if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip(); // Activar tooltips
+
+            $('#confirmDeleteModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var dni = button.data('dni');
+                var form = $('#deleteForm');
+                form.attr('action', '/delete_data/' + dni);
+            });
+
+            $('#viewDataModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var dni = button.data('dni');
+                var nombres = button.data('nombres');
+                var apellidos = button.data('apellidos');
+                var licencia = button.data('licencia');
+                var fechaRevalidacion = button.data('fecha_revalidacion');
+                var categoria = button.data('categoria');
+                $('#viewDni').text(dni);
+                $('#viewNombres').text(nombres);
+                $('#viewApellidos').text(apellidos);
+                $('#viewLicencia').text(licencia);
+                $('#viewFechaRevalidacion').text(fechaRevalidacion);
+                $('#viewCategoria').text(categoria);
+            });
+
+            $('#editDataModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var dni = button.data('dni');
+                var nombres = button.data('nombres');
+                var apellidos = button.data('apellidos');
+                var licencia = button.data('licencia');
+                var fechaRevalidacion = button.data('fecha_revalidacion');
+                var categoria = button.data('categoria');
+
+                // Asignar el valor del DNI original y el editable al formulario
+                $('#originalDni').val(dni);
+                $('#editDni').val(dni);
+                $('#editNombres').val(nombres);
+                $('#editApellidos').val(apellidos);
+                $('#editLicencia').val(licencia);
+                $('#editFechaRevalidacion').val(fechaRevalidacion);
+                $('#editCategoria').val(categoria);
+            });
+
+            // Mostrar modal de mensajes flash si hay mensajes
+            var hasMessages = {{ 'true' if get_flashed_messages() else 'false' }};
+            if (hasMessages) {
+                $('#flashMessageModal').modal('show');
+                setTimeout(function () {
+                    $('#flashMessageModal').modal('hide');
+                }, 3000);
+            }
+        });
+
+        function updatePerPage() {
+            var perPage = document.getElementById('per_page').value;
+            var url = new URL(window.location.href);
+            url.searchParams.set('per_page', perPage);
+            url.searchParams.set('page', 1);
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html>

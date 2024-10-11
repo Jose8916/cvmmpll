@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar codigo</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Verificar codigo</h1>
+        <p>Ingrese el codigo de 7 digitos enviado a su correo</p>
+        <form method="POST" action="{{ url_for('verify_code') }}">
+            <div class="form-group">
+                <label for="verification_code">Codigo enviado a su mail</label>
+                <input type="text" id="verification_code" name="verification_code" required>
+            </div>
+            <div class="form-buttons">
+                <button type="submit" class="btn-ingresar">Verificar</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

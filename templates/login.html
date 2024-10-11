@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Consulta de Licencias - Municipalidad de Pallasca</title>
+    <link rel="icon" href="/static/images/images.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/images/logo-buscador.jpg" type="image/x-icon">
+    <meta name="description" content="Consulta de licencia de conducir en la Municipalidad de Pallasca">
+    <meta property="og:title" content="Sistema de Consulta de Licencias - Municipalidad de Pallasca">
+    <meta property="og:description" content="Consulta de licencia de conducir en la Municipalidad de Pallasca">
+    <meta property="og:image" content="static/images/logo-buscador.jpg">
+    <meta property="og:url" content="https://munipallasca.com">
+    <meta property="og:type" content="website">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="column logo-column">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" class="logo">
+            </div>
+            <div class="column form-column">
+                <h1>MUNICIPALIDAD DE PALLASCA</h1>
+                <form method="POST" action="/login">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="text" id="dni" name="dni" required placeholder="DNI">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="password" id="password" name="password" required placeholder="Clave">
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: flex">
+                        <input type="checkbox" id="showPassword" onclick="togglePassword()">
+                        <label for="showPassword">Mostrar clave</label>
+                    </div>
+                    <button type="submit" class="btn-ingresar">Ingresar</button>
+                </form>
+                <div class="form-buttons">
+                    <button type="button" class="btn-ingresar" data-toggle="modal" data-target="#forgotPasswordModal">¿Olvido su clave?</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para enviar codigo -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" role="dialog" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">Recuperar clave</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Se ha enviado un codigo de 7 digitos al correo desarrolladorantabamba@gmail.com.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-ingresar" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="forgotPasswordForm" method="POST" action="{{ url_for('forgot_password') }}" style="display:none;">
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#forgotPasswordModal').on('hidden.bs.modal', function () {
+                document.getElementById('forgotPasswordForm').submit();
+            });
+        });
+
+        function togglePassword() {
+            var passwordField = document.getElementById("password");
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+            } else {
+                passwordField.type = "password";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" href="/static/images/images.ico" type="image/x-icon">
+        <link rel="shortcut icon" href="/static/images/logo-buscador.jpg" type="image/x-icon">
+        <title>Sistema de Consulta de licencias - Municipalidad de Pallasca</title>
+        <meta name="description" content="Consulta de licencia de conducir en la Municipalidad de Pallasca">
+        <meta property="og:title" content="Sistema de Consulta de licencias - Municipalidad de Pallasca">
+        <meta property="og:description" content="Consulta de licencia de conducir en la Municipalidad de Pallasca">
+        <meta property="og:image" content=/tatic/images/logo-buscador.jpg">
+        <meta property="og:url" content="https://munipallasca.com">
+        <meta property="og:type" content="website">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+    </head>
+<body>
+    <header>
+        <span>MUNICIPALIDAD PROVINCIAL DE PALLASCA - CABANA</span>
+        <img src="{{ url_for('static', filename='images/escudo-peru.png') }}" alt="Escudo" class="escudo">
+    </header>
+    
+    <a href="{{ url_for('login') }}" class="button-ingresar">Ingresar</a>
+    <div class="container">
+        <div class="row">
+            <div class="column logo-column">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" class="logo">
+            </div>
+            <div class="column form-column">
+                <h1>SISTEMA DE CONSULTA DE LICENCIA</h1>
+                <form method="POST" onsubmit="return validateForm()">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <select id="document_type" name="document_type" onchange="updateHiddenField()">
+                                <option value="DNI" {% if data.document_type == 'DNI' %}selected{% endif %}>DNI</option>
+                                <option value="Carnet de Extranjeria" {% if data.document_type == 'Carnet de Extranjeria' %}selected{% endif %}>Carnet de Extranjeria</option>
+                                <option value="CPP" {% if data.document_type == 'CPP' %}selected{% endif %}>CPP</option>
+                            </select>
+                            <input type="text" id="dni" name="dni" value="{{ data.dni }}" required placeholder="Ingrese documento">
+                        </div>
+                    </div>
+                    <button type="submit">Buscar</button>
+                    <input type="hidden" id="hidden_document_type" name="hidden_document_type" value="{{ data.document_type }}">
+                </form>
+                <div class="message" id="message">{{ data.mensaje }}</div>
+                <div class="result">
+                    <p><strong>{{ data.document_type }}:</strong> {{ data.dni }}</p>
+                    <p><strong>Nombres y Apellidos:</strong> {{ data.nombres_apellidos }}</p>
+                    <p><strong>Licencia:</strong> {{ data.licencia }}</p>
+                    <p><strong>Fecha de Revalidacion:</strong> {{ data.fecha_revalidacion }}</p>
+                    <p><strong>Categoria:</strong> {{ data.categoria }}</p>
+                    {% if data.dni %}
+                    <p style="text-align: center; font-weight: bold; margin-top: 10px; font-size: 20pt;">VIGENTE</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function showMessage(messageText) {
+            var message = document.getElementById('message');
+            message.textContent = messageText;
+            message.style.display = 'block';
+            setTimeout(function() {
+                message.style.display = 'none';
+            }, 3000);
+        }
+
+        function validateForm() {
+            var documentType = document.getElementById('document_type').value;
+            var dni = document.getElementById('dni').value;
+            var regex = /^[0-9]+$/;
+
+            if (!regex.test(dni)) {
+                showMessage('Solo debe ingresar nimbers');
+                return false;
+            }
+
+            if (documentType === 'DNI' && dni.length !== 8) {
+                showMessage('El DNI debe contener 8 caracteres');
+                return false;
+            }
+
+            if (documentType === 'Carnet de Extranjeria' && (dni.length < 8 || dni.length > 12) ) {
+                showMessage('El Carnet de Extranjeria debe contener de 8 a 12 caracteres');
+                return false;
+            }
+
+            if (documentType === 'CPP' && (dni.length < 8 || dni.length > 12) ) {
+                showMessage('El CPP debe contener de 8 a 12 caracteres');
+                return false;
+            }
+
+            document.getElementById('hidden_document_type').value = documentType;
+            return true;
+        }
+
+        function updateHiddenField() {
+            var documentType = document.getElementById('document_type').value;
+            document.getElementById('hidden_document_type').value = documentType;
+        }
+
+        function clearMessages() {
+            var message = document.getElementById('message');
+            message.style.display = 'none';
+            message.textContent = '';
+        }
+
+        window.onload = function() {
+            var message = document.getElementById('message');
+            if (message.textContent.trim() !== "") {
+                showMessage(message.textContent.trim());
+            }
+        };
+    </script>
+</body>
+</html>

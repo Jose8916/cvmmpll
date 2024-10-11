@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="/static/images/images.ico" type="image/x-icon">
+    <title>Sistema de Consulta de licencias - Municipalidad de Pallasca</title>
+    <meta name="description" content="Consulta de licencia de conducir en la Municipalidad de Pallasca">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Subir Datos desde Excel</h1>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Selecciona un archivo Excel:</label>
+                <input type="file" id="file" name="file" accept=".xls, .xlsx" required>
+            </div>
+            <button type="submit" class="btn-ingresar">Subir</button>
+        </form>
+    </div>
+</body>
+</html>
